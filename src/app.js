@@ -1,19 +1,21 @@
 import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
+import { ApiError } from "./utils/ApiError.js"
+import { ApiResponse } from "./utils/ApiResponse.js"
 
 const app = express()
 
-app.use(cors({
-    origin: process.env.CORS_ORIGIN,
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : true,
     credentials: true
-}))
+}
 
+app.use(cors(corsOptions))
 app.use(express.json({limit: "16kb"}))
 app.use(express.urlencoded({extended: true, limit: "16kb"}))
 app.use(express.static("public"))
 app.use(cookieParser())
-
 
 //routes import
 import userRouter from './routes/user.routes.js'
@@ -37,6 +39,16 @@ app.use("/api/v1/likes", likeRouter)
 app.use("/api/v1/playlist", playlistRouter)
 app.use("/api/v1/dashboard", dashboardRouter)
 
-// http://localhost:8000/api/v1/users/register
+app.use((req, res, next) => {
+    next(new ApiError(404, "Route not found"))
+})
+
+app.use((err, req, res, next) => {
+    const statusCode = err.statusCode || 500
+    const message = err.message || "Internal Server Error"
+    const data = err.data || {}
+
+    res.status(statusCode).json(new ApiResponse(statusCode, data, message))
+})
 
 export { app }

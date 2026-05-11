@@ -8,16 +8,26 @@ dotenv.config({
 
 
 
+const port = process.env.PORT || 8000
+
 connectDB()
 .then(() => {
-    app.listen(process.env.PORT || 8000, () => {
-        console.log(`⚙️ Server is running at port : ${process.env.PORT}`);
+    const server = app.listen(port, () => {
+        console.log(`⚙️ Server is running at port : ${port}`);
+    })
+
+    server.on("error", (err) => {
+        if (err.code === "EADDRINUSE") {
+            console.error(`Port ${port} is already in use. Close any other process using this port or change PORT in .env.`)
+            process.exit(1)
+        }
+        throw err
     })
 })
 .catch((err) => {
     console.log("MONGO db connection failed !!! ", err);
 })
-
+ 
 
 
 

@@ -3,12 +3,12 @@ import mongoose, {Schema} from "mongoose";
 
 const likeSchema = new Schema({
     video: {
-        type: Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,//giving the reference of another schema video
         ref: "Video"
     },
     comment: {
         type: Schema.Types.ObjectId,
-        ref: "Comment"
+        ref: "Comment"// giving the reference of another schema comment
     },
     tweet: {
         type: Schema.Types.ObjectId,

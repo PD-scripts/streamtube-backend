@@ -10,13 +10,13 @@ const userSchema = new Schema(
             unique: true,
             lowercase: true,
             trim: true, 
-            index: true
+            index: true// for searching users by username, it will create an index on username field and it will make the search faster
         },
         email: {
             type: String,
             required: true,
             unique: true,
-            lowecase: true,
+            lowercase: true,
             trim: true, 
         },
         fullName: {
@@ -40,7 +40,7 @@ const userSchema = new Schema(
         ],
         password: {
             type: String,
-            required: [true, 'Password is required']
+            required: [true, 'Password is required']//custom error message
         },
         refreshToken: {
             type: String
@@ -48,10 +48,12 @@ const userSchema = new Schema(
 
     },
     {
-        timestamps: true
+        timestamps: true// createdAt, updatedAt
     }
 )
 
+//******************************************************************************************************************************8 */
+//pre save hook for hashing the password before saving the user to the database
 userSchema.pre("save", async function (next) {
     if(!this.isModified("password")) return next();
 

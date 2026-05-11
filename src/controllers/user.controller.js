@@ -8,20 +8,18 @@ import mongoose from "mongoose";
 
 
 const generateAccessAndRefereshTokens = async(userId) =>{
-    try {
-        const user = await User.findById(userId)
-        const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateRefreshToken()
-
-        user.refreshToken = refreshToken
-        await user.save({ validateBeforeSave: false })
-
-        return {accessToken, refreshToken}
-
-
-    } catch (error) {
-        throw new ApiError(500, "Something went wrong while generating referesh and access token")
+    const user = await User.findById(userId)
+    if (!user) {
+        throw new ApiError(404, "User not found")
     }
+
+    const accessToken = user.generateAccessToken()
+    const refreshToken = user.generateRefreshToken()
+
+    user.refreshToken = refreshToken
+    await user.save({ validateBeforeSave: false })
+
+    return {accessToken, refreshToken}
 }
 
 const registerUser = asyncHandler( async (req, res) => {
@@ -137,15 +135,16 @@ const loginUser = asyncHandler(async (req, res) =>{
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
-    const options = {
+    const cookieOptions = {
         httpOnly: true,
-        secure: true
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax"
     }
 
     return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
     .json(
         new ApiResponse(
             200, 
@@ -171,15 +170,16 @@ const logoutUser = asyncHandler(async(req, res) => {
         }
     )
 
-    const options = {
+    const cookieOptions = {
         httpOnly: true,
-        secure: true
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax"
     }
 
     return res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken", cookieOptions)
+    .clearCookie("refreshToken", cookieOptions)
     .json(new ApiResponse(200, {}, "User logged Out"))
 })
 
@@ -207,17 +207,18 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             
         }
     
-        const options = {
+        const cookieOptions = {
             httpOnly: true,
-            secure: true
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax"
         }
     
         const {accessToken, newRefreshToken} = await generateAccessAndRefereshTokens(user._id)
     
         return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", newRefreshToken, options)
+        .cookie("accessToken", accessToken, cookieOptions)
+        .cookie("refreshToken", newRefreshToken, cookieOptions)
         .json(
             new ApiResponse(
                 200, 
